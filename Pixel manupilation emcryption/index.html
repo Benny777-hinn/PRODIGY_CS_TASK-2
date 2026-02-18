@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pixel Image Encryption</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 960px;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .card {
+      background: #111827;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      border: 1px solid #1f2937;
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 4px;
+      font-size: 24px;
+      color: #f9fafb;
+    }
+
+    .subtitle {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #9ca3af;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    label {
+      font-size: 13px;
+      color: #d1d5db;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    input[type="file"],
+    input[type="number"],
+    select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 13px;
+    }
+
+    input[type="number"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
+    }
+
+    .inline-options {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: #d1d5db;
+    }
+
+    .inline-options label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+    }
+
+    .inline-options input[type="radio"],
+    .inline-options input[type="checkbox"] {
+      accent-color: #3b82f6;
+    }
+
+    button {
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: none;
+      background: #2563eb;
+      color: #f9fafb;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.08s ease;
+      width: 100%;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      background: #374151;
+      cursor: default;
+    }
+
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      border: 1px solid #1f2937;
+      border-radius: 10px;
+      padding: 10px;
+      background: #020617;
+    }
+
+    .panel h2 {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      font-weight: 500;
+      color: #e5e7eb;
+    }
+
+    canvas {
+      width: 100%;
+      max-height: 320px;
+      border-radius: 8px;
+      background: #020617;
+    }
+
+    .note {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .download-link {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 13px;
+      color: #a5b4fc;
+      text-decoration: none;
+    }
+
+    .download-link:hover {
+      text-decoration: underline;
+    }
+
+    .error {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #fca5a5;
+    }
+
+    @media (max-width: 800px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <h1>Pixel Image Encryption</h1>
+      <p class="subtitle">
+        Load an image, choose a key and operations, then encrypt or decrypt entirely in your browser.
+      </p>
+
+      <div class="grid">
+        <div class="controls">
+          <div>
+            <label for="imageInput">1. Choose image</label>
+            <input id="imageInput" type="file" accept="image/*" />
+          </div>
+
+          <div>
+            <label>2. Mode</label>
+            <div class="inline-options">
+              <label>
+                <input type="radio" name="mode" value="encrypt" checked />
+                Encrypt
+              </label>
+              <label>
+                <input type="radio" name="mode" value="decrypt" />
+                Decrypt
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label>3. Method</label>
+            <div class="inline-options">
+              <label>
+                <input type="radio" name="method" value="xor" checked />
+                XOR
+              </label>
+              <label>
+                <input type="radio" name="method" value="add" />
+                Add/Subtract
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label for="keyInput">4. Key (0–255)</label>
+            <input id="keyInput" type="number" min="0" max="255" value="123" />
+          </div>
+
+          <div>
+            <label>5. Extra scrambling</label>
+            <div class="inline-options">
+              <label>
+                <input type="checkbox" id="swapPairs" />
+                Swap neighbouring pixels
+              </label>
+              <label>
+                <input type="checkbox" id="swapChannels" />
+                Swap R/B channels
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <button id="processButton" disabled>Encrypt / Decrypt</button>
+            <div id="error" class="error"></div>
+          </div>
+
+          <div class="note">
+            Use the same settings (mode, method, key and options) to decrypt
+            an image that you previously encrypted.
+          </div>
+        </div>
+
+        <div class="panels">
+          <div class="panel">
+            <h2>Original</h2>
+            <canvas id="originalCanvas"></canvas>
+          </div>
+          <div class="panel">
+            <h2>Result</h2>
+            <canvas id="resultCanvas"></canvas>
+            <a id="downloadLink" class="download-link" href="#" download="output.png" style="display:none;">
+              Download result
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const imageInput = document.getElementById("imageInput");
+    const originalCanvas = document.getElementById("originalCanvas");
+    const resultCanvas = document.getElementById("resultCanvas");
+    const processButton = document.getElementById("processButton");
+    const keyInput = document.getElementById("keyInput");
+    const swapPairs = document.getElementById("swapPairs");
+    const swapChannels = document.getElementById("swapChannels");
+    const errorLabel = document.getElementById("error");
+    const downloadLink = document.getElementById("downloadLink");
+
+    let originalImageLoaded = false;
+
+    function getSelectedRadio(name) {
+      const elements = document.querySelectorAll('input[name="' + name + '"]');
+      for (const el of elements) {
+        if (el.checked) return el.value;
+      }
+      return null;
+    }
+
+    function enableButtonIfReady() {
+      processButton.disabled = !originalImageLoaded;
+    }
+
+    imageInput.addEventListener("change", function () {
+      errorLabel.textContent = "";
+      downloadLink.style.display = "none";
+      const file = imageInput.files && imageInput.files[0];
+      if (!file) {
+        originalImageLoaded = false;
+        enableButtonIfReady();
+        const ctx = originalCanvas.getContext("2d");
+        ctx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
+        const ctx2 = resultCanvas.getContext("2d");
+        ctx2.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          const maxWidth = 400;
+          const scale = img.width > maxWidth ? maxWidth / img.width : 1;
+          const width = img.width * scale;
+          const height = img.height * scale;
+
+          originalCanvas.width = width;
+          originalCanvas.height = height;
+          resultCanvas.width = width;
+          resultCanvas.height = height;
+
+          const ctx = originalCanvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const ctx2 = resultCanvas.getContext("2d");
+          ctx2.clearRect(0, 0, width, height);
+
+          originalImageLoaded = true;
+          enableButtonIfReady();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function applyXor(value, key) {
+      return value ^ key;
+    }
+
+    function applyAdd(value, key, decrypt) {
+      if (decrypt) {
+        return (value - key + 256) % 256;
+      }
+      return (value + key) % 256;
+    }
+
+    function processImageData(imageData, key, method, mode, doSwapPairs, doSwapChannels) {
+      const data = imageData.data;
+      const decrypt = mode === "decrypt";
+
+      if (doSwapPairs) {
+        for (let i = 0; i + 7 < data.length; i += 8) {
+          for (let j = 0; j < 4; j++) {
+            const temp = data[i + j];
+            data[i + j] = data[i + 4 + j];
+            data[i + 4 + j] = temp;
+          }
+        }
+      }
+
+      for (let i = 0; i < data.length; i += 4) {
+        let r = data[i];
+        let g = data[i + 1];
+        let b = data[i + 2];
+        const a = data[i + 3];
+
+        if (doSwapChannels) {
+          const temp = r;
+          r = b;
+          b = temp;
+        }
+
+        if (method === "xor") {
+          r = applyXor(r, key);
+          g = applyXor(g, key);
+          b = applyXor(b, key);
+        } else if (method === "add") {
+          r = applyAdd(r, key, decrypt);
+          g = applyAdd(g, key, decrypt);
+          b = applyAdd(b, key, decrypt);
+        }
+
+        if (doSwapChannels) {
+          const temp2 = r;
+          r = b;
+          b = temp2;
+        }
+
+        data[i] = r;
+        data[i + 1] = g;
+        data[i + 2] = b;
+        data[i + 3] = a;
+      }
+
+      return imageData;
+    }
+
+    processButton.addEventListener("click", function () {
+      errorLabel.textContent = "";
+      downloadLink.style.display = "none";
+
+      if (!originalImageLoaded) {
+        errorLabel.textContent = "Please choose an image first.";
+        return;
+      }
+
+      const mode = getSelectedRadio("mode");
+      const method = getSelectedRadio("method");
+      let key = parseInt(keyInput.value, 10);
+
+      if (Number.isNaN(key)) {
+        errorLabel.textContent = "Key must be a number.";
+        return;
+      }
+
+      key = ((key % 256) + 256) % 256;
+      keyInput.value = key.toString();
+
+      const ctxOriginal = originalCanvas.getContext("2d");
+      const ctxResult = resultCanvas.getContext("2d");
+
+      const width = originalCanvas.width;
+      const height = originalCanvas.height;
+
+      const imageData = ctxOriginal.getImageData(0, 0, width, height);
+      const processed = processImageData(
+        imageData,
+        key,
+        method,
+        mode,
+        swapPairs.checked,
+        swapChannels.checked
+      );
+
+      ctxResult.putImageData(processed, 0, 0);
+
+      const dataUrl = resultCanvas.toDataURL("image/png");
+      downloadLink.href = dataUrl;
+      downloadLink.style.display = "inline-block";
+    });
+  </script>
+</body>
+</html>
+
